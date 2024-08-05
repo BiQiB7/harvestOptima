@@ -1,7 +1,16 @@
+#root{
+  background-color: #F9F9F9;
+  min-height: 100vh;
+}
+
 .App {
   text-align: center;
 }
 
+h1 {
+  font-size: larger;
+  font-weight: 600;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;
