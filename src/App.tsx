@@ -31,6 +31,7 @@ const PreserveQueryNavigate = ({ to }: any) => {
   return <Navigate to={`${to}${search}`} replace />
 }
 const Home = lazy(() => import('./views/Home'))
+const LandingPage = lazy(() => import('./views/LandingPage'))
 const IPM = lazy(() => import('./views/IPM/index'))
 const Calculator = lazy(() => import('./views/Calculator/index'))
 const CalculatorResult = lazy(() => import('./views/Calculator/result'))
@@ -38,6 +39,7 @@ const Chatbot = lazy(() => import('./views/Chatbot'))
 const HelpPage = lazy(() => import('./views/Help/index'))
 const SuggestedQuestionsPage = lazy(() => import('./views/Help/SuggestedQuestionsPage'))
 const DetailPage = lazy(() => import('./views/IPM/detail'))
+const GoogleMap = lazy(() => import('./views/GoogleMap'))
 
 function App() {
   return (
@@ -46,7 +48,8 @@ function App() {
         <SuspenseWithChunkError fallback={<PageLoader />}>
           <RemoveTrailingSlash />
           <Routes>
-            <Route index element={<PreserveQueryNavigate to="/home" />} />
+            <Route index element={<PreserveQueryNavigate to="/landing-page" />} />
+            <Route path="/landing-page" element={<LandingPage />} />
             <Route path="/home" element={<Home />} />
             <Route path="/ipm" element={<IPM />} />
             <Route path="/calculator" element={<Calculator />} />
@@ -56,6 +59,7 @@ function App() {
             <Route path="/help" element={<HelpPage />} />
             <Route path="/help/suggested-questions" element={<SuggestedQuestionsPage />} />
             <Route path="/ipm/:plant/:item" element={<DetailPage />} />
+            <Route path="/map" element={<GoogleMap />} />
             {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </SuspenseWithChunkError>

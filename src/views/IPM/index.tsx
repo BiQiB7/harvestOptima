@@ -2,6 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
+import FieldTable from '../../components/FieldInfo';
+import { Flex } from '@chakra-ui/react';
 
 interface Disease {
     name: string;
@@ -35,20 +37,20 @@ const plants: PlantInfo[] = [
             { name: 'Wheat', imageUrl: '/images/ipm/mung-bean/wheat.svg' },
         ],
     },
-    {
-        name: 'Millet',
-        imageUrl: '/images/millet.jpg',
-        diseases: [
-            { name: 'Blast', imageUrl: '/images/millet-blast.jpg' },
-            { name: 'Downy Mildew', imageUrl: '/images/millet-downy-mildew.jpg' },
-            { name: 'Ergot', imageUrl: '/images/millet-ergot.jpg' },
-        ],
-        rotationCrops: [
-            { name: 'Soybean', imageUrl: '/images/soybean.jpg' },
-            { name: 'Peanut', imageUrl: '/images/peanut.jpg' },
-            { name: 'Cotton', imageUrl: '/images/cotton.jpg' },
-        ],
-    },
+    // {
+    //     name: 'Millet',
+    //     imageUrl: '/images/millet.jpg',
+    //     diseases: [
+    //         { name: 'Blast', imageUrl: '/images/millet-blast.jpg' },
+    //         { name: 'Downy Mildew', imageUrl: '/images/millet-downy-mildew.jpg' },
+    //         { name: 'Ergot', imageUrl: '/images/millet-ergot.jpg' },
+    //     ],
+    //     rotationCrops: [
+    //         { name: 'Soybean', imageUrl: '/images/soybean.jpg' },
+    //         { name: 'Peanut', imageUrl: '/images/peanut.jpg' },
+    //         { name: 'Cotton', imageUrl: '/images/cotton.jpg' },
+    //     ],
+    // },
 ];
 
 const IPM: React.FC = () => {
@@ -61,16 +63,15 @@ const IPM: React.FC = () => {
     return (
         <div>
             <Navbar />
+            <Flex margin="20px" justifyContent='flex-end'><FieldTable/></Flex>
+            
             <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-
-
                 <div style={{ maxWidth: '1000px', display: 'inline-block' }}>
-                    <h1>Integrated Pest Management</h1>
                     {plants.map((plant) => (
                         <div key={plant.name} style={{ marginBottom: '40px', border: '1px solid #ddd', padding: '20px', borderRadius: '10px', textAlign: 'left' }}>
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                                <img src={plant.imageUrl} alt={plant.name} style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '20px', borderRadius: '50%' }} />
-                                {/* <h2>{plant.name}</h2> */}
+                                <img src={plant.imageUrl} alt={plant.name} style={{ width: '50px', height: '50px', objectFit: 'cover', marginRight: '20px', borderRadius: '50%' }} />
+                                <h2>{plant.name}</h2>
                             </div>
 
                             <h2>Possible Diseases and Prevention</h2>
@@ -90,7 +91,7 @@ const IPM: React.FC = () => {
                                 {plant.rotationCrops.map((crop) => (
                                     <div key={crop.name} style={{ marginRight: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => handleImageClick(plant.name, crop.name)}>
                                         <img src={crop.imageUrl} alt={crop.name} style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '10px' }} />
-                                        <p>{crop.name}</p>
+                                        {/* <p>{crop.name}</p> */}
                                     </div>
                                 ))}
                             </div>
