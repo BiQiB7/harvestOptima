@@ -1,7 +1,9 @@
 import React from 'react'
-import { Flex } from '@chakra-ui/react'
+import Navbar from "../../components/Navbar"
 
 const Forum: React.FC = () => {
-    return <Flex/>
+    return (<div>
+        <Navbar />
+    </div>)
 }
 export default Forum;

@@ -10,6 +10,7 @@ import {
 import { ChakraProvider } from '@chakra-ui/react'
 import SuspenseWithChunkError from './components/SuspenseWithChunkError';
 import PageLoader from './components/PageLoader';
+import Forum from './views/Forum';
 
 export const RemoveTrailingSlash = ({ ...rest }) => {
   const location = useLocation()
@@ -30,10 +31,13 @@ const PreserveQueryNavigate = ({ to }: any) => {
   return <Navigate to={`${to}${search}`} replace />
 }
 const Home = lazy(() => import('./views/Home'))
-const IPM = lazy(() => import('./views/IPM'))
+const IPM = lazy(() => import('./views/IPM/index'))
 const Calculator = lazy(() => import('./views/Calculator/index'))
 const CalculatorResult = lazy(() => import('./views/Calculator/result'))
 const Chatbot = lazy(() => import('./views/Chatbot'))
+const HelpPage = lazy(() => import('./views/Help/index'))
+const SuggestedQuestionsPage = lazy(() => import('./views/Help/SuggestedQuestionsPage'))
+const DetailPage = lazy(() => import('./views/IPM/detail'))
 
 function App() {
   return (
@@ -48,6 +52,10 @@ function App() {
             <Route path="/calculator" element={<Calculator />} />
             <Route path="/calculator/result" element={<CalculatorResult />} />
             <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/forum" element={<Forum />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/help/suggested-questions" element={<SuggestedQuestionsPage />} />
+            <Route path="/ipm/:plant/:item" element={<DetailPage />} />
             {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </SuspenseWithChunkError>
