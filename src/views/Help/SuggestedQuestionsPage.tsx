@@ -41,7 +41,8 @@ const SuggestedQuestionsPage: React.FC = () => {
           <h2>{category.topic}</h2>
           <ul>
             {category.questions.map((question, qIndex) => (
-              <li key={qIndex} style={{ marginBottom: '10px'}}>{question}</li>
+              <p>{question}</p>
+              // <li key={qIndex} style={{ marginBottom: '10px'}}></li>
             ))}
           </ul>
         </div>

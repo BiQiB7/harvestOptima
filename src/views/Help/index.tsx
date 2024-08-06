@@ -10,9 +10,9 @@ interface HelpCard {
 const helpCards: HelpCard[] = [
   { title: 'Suggested Questions', icon: '❓', route: '/help/suggested-questions' },
   { title: 'Navigating the App', icon: '🧭', route: '/help/navigation-guide' },
-  { title: 'Reporting Problems', icon: '🚩', route: '/help/report-problem' },
-  { title: 'Additional Resources', icon: '📚', route: '/help/resources' },
-  { title: 'Schedule a Call', icon: '📞', route: '/help/schedule-call' },
+  // { title: 'Reporting Problems', icon: '🚩', route: '/help/report-problem' },
+  // { title: 'Additional Resources', icon: '📚', route: '/help/resources' },
+  // { title: 'Schedule a Call', icon: '📞', route: '/help/schedule-call' },
 ];
 
 const HelpPage: React.FC = () => {

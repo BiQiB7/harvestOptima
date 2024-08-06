@@ -35,7 +35,7 @@ const CalculatorResult: React.FC = () => {
             <Navbar />
             <BackButton />
             <Flex flex={1} justifyContent="center" alignItems="center" margin="20px">
-                <VStack spacing={6} align="stretch" maxW='1000px' width="100%">
+                <VStack spacing={6} align="stretch" maxW='1000px' width="100%" px={{ base: 4, md: 0 }}>
                     <Text fontSize="2xl" fontWeight="bold">Required Fertilisers</Text>
 
                     <Flex direction="row" gap={8} justifyContent='center' bg="#004E36" color="#FFFFFF" p={6} borderRadius="md">
@@ -52,7 +52,14 @@ const CalculatorResult: React.FC = () => {
                             <Text>{result.mop.toFixed(2)} kg</Text>
                         </Box>
                     </Flex>
-                    <Flex direction="row" gap={8} justifyContent='center' p={6} borderRadius="md">
+                    <Flex
+                        direction={{ base: "column", md: "row" }}
+                        gap={8}
+                        justifyContent='center'
+                        p={6}
+                        borderRadius="md"
+                        margin="0 auto"
+                    >
                         <Box
                             alignItems="center"
                             justifyContent="center"
@@ -60,9 +67,10 @@ const CalculatorResult: React.FC = () => {
                             boxShadow="md"
                             p={4}
                             borderRadius="md"
+                            // width={{ base: "100%", md: "auto" }}
                         >
                             <Text style={{ color: "#000000" }}>{ureaBags} x </Text>
-                            <img src="/images/urea.svg" alt="urea" style={{ width: "100%", height: "150px", borderRadius: "10px", objectFit: "cover", objectPosition: "center" }} />
+                            <img src="/images/urea.svg" alt="urea" style={{ maxHeight: "150px", borderRadius: "10px", objectFit: "cover", objectPosition: "center" }} />
                             <Flex direction='column'>
                                 <a
                                     style={{
@@ -97,9 +105,10 @@ const CalculatorResult: React.FC = () => {
                             boxShadow="md"
                             p={4}
                             borderRadius="md"
+                            width={{ base: "100%", md: "auto" }}
                         >
                             <Text style={{ color: "#000000" }}>{tspBags} x </Text>
-                            <img src="/images/tsp.svg" alt="tsp" style={{ width: "100%", height: "150px", borderRadius: "10px", objectFit: "cover", objectPosition: "center" }} />
+                            <img src="/images/tsp.svg" alt="tsp" style={{ maxHeight: "150px", borderRadius: "10px", objectFit: "cover", objectPosition: "center" }} />
                             <Flex direction='column'>
                                 <a
                                     style={{
@@ -133,9 +142,10 @@ const CalculatorResult: React.FC = () => {
                             boxShadow="md"
                             p={4}
                             borderRadius="md"
+                            width={{ base: "100%", md: "auto" }}
                         >
                             <Text style={{ color: "#000000" }}>{mopBags} x </Text>
-                            <img src="/images/mop.svg" alt="mop" style={{ width: "100%", height: "150px", borderRadius: "10px", objectFit: "cover", objectPosition: "center" }} />
+                            <img src="/images/mop.svg" alt="mop" style={{ maxHeight: "150px", borderRadius: "10px", objectFit: "cover", objectPosition: "center" }} />
                             <Flex direction='column'>
                                 <a
                                     style={{
@@ -164,8 +174,8 @@ const CalculatorResult: React.FC = () => {
                         </Box>
                     </Flex>
                 </VStack>
-            </Flex>
-        </Flex>
+            </Flex >
+        </Flex >
     )
 }
 

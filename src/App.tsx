@@ -38,6 +38,7 @@ const CalculatorResult = lazy(() => import('./views/Calculator/result'))
 const Chatbot = lazy(() => import('./views/Chatbot'))
 const HelpPage = lazy(() => import('./views/Help/index'))
 const SuggestedQuestionsPage = lazy(() => import('./views/Help/SuggestedQuestionsPage'))
+const NavigationGuide = lazy(() => import('./views/Help/NavigationGuide'))
 const DetailPage = lazy(() => import('./views/IPM/detail'))
 const GoogleMap = lazy(() => import('./views/GoogleMap'))
 
@@ -58,6 +59,7 @@ function App() {
             <Route path="/forum" element={<Forum />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/help/suggested-questions" element={<SuggestedQuestionsPage />} />
+            <Route path="/help/navigation-guide" element={<NavigationGuide />} />
             <Route path="/ipm/:plant/:item" element={<DetailPage />} />
             <Route path="/map" element={<GoogleMap />} />
             {/* <Route path="*" element={<NotFound />} /> */}

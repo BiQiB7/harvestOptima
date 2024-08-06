@@ -29,12 +29,12 @@ const plants: PlantInfo[] = [
         diseases: [
             { name: 'Powdery Mildew', imageUrl: '/images/ipm/mung-bean/powdery-mildew.svg' },
             { name: 'Root Rot', imageUrl: '/images/ipm/mung-bean/root-rot.svg' },
-            { name: 'Leaf Spot', imageUrl: '/images/ipm/mung-bean/leaf-spot.svg' },
+            // { name: 'Leaf Spot', imageUrl: '/images/ipm/mung-bean/leaf-spot.svg' },
         ],
         rotationCrops: [
             { name: 'Cabbage', imageUrl: '/images/ipm/mung-bean/cabbage.svg' },
             { name: 'Onion', imageUrl: '/images/ipm/mung-bean/onion.svg' },
-            { name: 'Wheat', imageUrl: '/images/ipm/mung-bean/wheat.svg' },
+            // { name: 'Wheat', imageUrl: '/images/ipm/mung-bean/wheat.svg' },
         ],
     },
     // {

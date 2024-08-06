@@ -25,12 +25,12 @@ const LandingPage: React.FC = () => {
 
             <Features>
                 <Feature>
-                    <FeatureIcon>🌱</FeatureIcon>
+                    <FeatureIcon>⌛</FeatureIcon>
                     <FeatureTitle>Real-Time Solutions</FeatureTitle>
                     <FeatureDescription>Get instant advice based on current conditions and verified knowledge.</FeatureDescription>
                 </Feature>
                 <Feature>
-                    <FeatureIcon>🔬</FeatureIcon>
+                    <FeatureIcon>🧑🏽‍💼</FeatureIcon>
                     <FeatureTitle>Professional Expertise</FeatureTitle>
                     <FeatureDescription>Access a comprehensive, verified knowledge base curated by agricultural experts.</FeatureDescription>
                 </Feature>
@@ -42,7 +42,7 @@ const LandingPage: React.FC = () => {
                 <Feature>
                     <FeatureIcon>🎯</FeatureIcon>
                     <FeatureTitle>Personalized Advice</FeatureTitle>
-                    <FeatureDescription>Receive actionable recommendations tailored to your specific crop and conditions.</FeatureDescription>
+                    <FeatureDescription>Receive actionable recommendations tailored to your specific crop.</FeatureDescription>
                 </Feature>
                 <Feature>
                     <FeatureIcon>🛰️</FeatureIcon>
@@ -52,7 +52,7 @@ const LandingPage: React.FC = () => {
                 <Feature>
                     <FeatureIcon>🧮</FeatureIcon>
                     <FeatureTitle>Precision farming</FeatureTitle>
-                    <FeatureDescription>POptimize your farming input use with our calculators.</FeatureDescription>
+                    <FeatureDescription>Optimize your farming input use with our calculators.</FeatureDescription>
                 </Feature>
             </Features>
 
