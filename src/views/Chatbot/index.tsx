@@ -4,6 +4,27 @@ import { HfInference } from "@huggingface/inference";
 import { FaPlay, FaPause } from 'react-icons/fa';
 import Navbar from "../../components/Navbar"
 import HelpButton from '../../components/HelpButton';
+import stringSimilarity from 'string-similarity-js';
+import { ChatMistralAI } from "@langchain/mistralai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MistralAIEmbeddings } from "@langchain/mistralai";
+interface CropInfo {
+    crop_name: string;
+    recommended_nitrogen: number;
+    recommended_potassium: number;
+    recommended_phosphorus: number;
+    rotatable_with: string[];
+}
+interface Crop {
+    crop_name: string;
+    recommended_nitrogen: number;
+    recommended_potassium: number;
+    recommended_phosphorus: number;
+    rotatable_with: Array<string>;
+}
 
 interface Message {
     role: 'user' | 'assistant';
@@ -13,7 +34,10 @@ interface Message {
     isPlaying?: boolean;
     audioDuration?: number;
 }
+
+
 const Chatbot: React.FC = () => {
+
     const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState<string>('');
@@ -30,66 +54,106 @@ const Chatbot: React.FC = () => {
     const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
     const inference = new HfInference("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");
-
-    const fetchHuggingFaceResponse = async (userMessage: string): Promise<void> => {
-        setIsLoading(true);
-        let fullResponse = '';
-
+    const [vectorStore, setVectorStore] = useState<MemoryVectorStore | null>(null);
+    useEffect(() => {
+        initializeVectorStore();
+    }, []);
+    const initializeVectorStore = async () => {
         try {
-            setMessages(prev => [...prev, { role: 'assistant', content: '', isComplete: false }]);
-
-            const languagePrompt = selectedLanguage === 'id'
-                ? "Please respond in Indonesian. "
-                : "";
-
-
-            for await (const chunk of inference.chatCompletionStream({
-                model: "meta-llama/Meta-Llama-3-8B-Instruct",
-                messages: [
-                    { role: "system", content: `${languagePrompt}Respond to the user's message.` },
-                    ...messages,
-                    { role: "user", content: userMessage }
-                ],
-                max_tokens: 500,
-            })) {
-                const content = chunk.choices[0]?.delta?.content || "";
-                fullResponse += content;
-
-                setMessages(prev => {
-                    const updatedMessages = [...prev];
-                    const lastMessage = updatedMessages[updatedMessages.length - 1];
-                    if (lastMessage.role === 'assistant') {
-                        lastMessage.content = fullResponse;
-                    }
-                    return updatedMessages;
-                });
-            }
-
-            setMessages(prev => {
-                const updatedMessages = [...prev];
-                const lastMessage = updatedMessages[updatedMessages.length - 1];
-                if (lastMessage.role === 'assistant') {
-                    lastMessage.isComplete = true;
-                }
-                return updatedMessages;
-            });
+            // Fetch initial crop data with some default keywords
+            const initialCropData = await fetchCropData(['crop', 'nutrient', 'rotation']);
+            const vectorStore = await MemoryVectorStore.fromTexts(
+                initialCropData.map(crop => JSON.stringify(crop)),
+                initialCropData.map(crop => ({ id: crop.crop_name })),
+                embeddings
+            );
+            setVectorStore(vectorStore);
         } catch (error) {
-            console.error('Error fetching Hugging Face response:', error);
+            console.error('Failed to initialize vector store:', error);
             toast({
-                title: 'Error',
-                description: 'Failed to get response from the server.',
+                title: 'Initialization Error',
+                description: 'Failed to load initial crop data.',
                 status: 'error',
-                duration: 3000,
+                duration: 5000,
                 isClosable: true,
             });
-            setMessages(prev => [
-                ...prev,
-                { role: 'assistant', content: 'Sorry, I encountered an error while processing your request.', isComplete: true }
-            ]);
-        } finally {
-            setIsLoading(false);
         }
     };
+
+    const embeddings = new MistralAIEmbeddings({
+        apiKey: "8Io7H50D1h2YvlUdcK5uIvRQQjc8Wqaw"
+        // process.env.MISTRAL_API_KEY,
+    });
+
+    const fetchCropData = async (keywords: string[]): Promise<CropInfo[]> => {
+        const response = await fetch('http://localhost:3001/api/query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keywords }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch crop data');
+        }
+        return await response.json();
+    };
+    const updateVectorStore = async (cropData: CropInfo[]) => {
+        if (vectorStore) {
+            await vectorStore.addDocuments(
+                cropData.map(crop => ({
+                    pageContent: JSON.stringify(crop),
+                    metadata: { id: crop.crop_name },
+                }))
+            );
+        } else {
+            const newVectorStore = await MemoryVectorStore.fromTexts(
+                cropData.map(crop => JSON.stringify(crop)),
+                cropData.map(crop => ({ id: crop.crop_name })),
+                embeddings
+            );
+            setVectorStore(newVectorStore);
+        }
+    };
+    const generateRAGResponse = async (userMessage: string): Promise<string> => {
+        const keywords = userMessage.toLowerCase().split(/\s+/).filter(word => word.length > 3);
+        
+        const cropData = await fetchCropData(keywords);
+        await updateVectorStore(cropData);
+
+        if (!vectorStore) {
+            throw new Error("Vector store not initialized");
+        }
+
+        const model = new ChatMistralAI({
+            apiKey: "8Io7H50D1h2YvlUdcK5uIvRQQjc8Wqaw",
+            // process.env.MISTRAL_API_KEY,
+            modelName: "mistral-tiny",
+        });
+
+        const retriever = vectorStore.asRetriever();
+
+        const prompt = PromptTemplate.fromTemplate(`
+            You are an AI assistant specializing in agricultural advice. Use the following context to answer the user's question:
+            Context: {context}
+            
+            Human: {question}
+            AI: `);
+
+        const chain = RunnableSequence.from([
+            {
+                context: retriever.pipe(docs => docs.map(doc => doc.pageContent).join("\n")),
+                question: (input: string) => input,
+            },
+            prompt,
+            model,
+            new StringOutputParser(),
+        ]);
+
+        const response = await chain.invoke(userMessage);
+        return response;
+    };
+
 
     const handleSend = async () => {
         if (input.trim() === '') return;
@@ -97,9 +161,194 @@ const Chatbot: React.FC = () => {
         const userMessage: Message = { role: 'user', content: input, isComplete: true };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
+        setIsLoading(true);
 
-        await fetchHuggingFaceResponse(input);
+        try {
+            const response = await generateRAGResponse(input);
+            setMessages(prev => [...prev, { role: 'assistant', content: response, isComplete: true }]);
+        } catch (error) {
+            console.error('Error generating response:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to generate response.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    // Add this function to query the database
+    // const queryDatabase = async (keywords: string[]): Promise<Crop[]> => {
+    //     try {
+    //         const response = await fetch('http://localhost:3001/api/query', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({ keywords }),
+    //         });
+
+    //         if (!response.ok) {
+    //             throw new Error('Network response was not ok');
+    //         }
+
+    //         return await response.json();
+    //     } catch (error) {
+    //         console.error('Error querying database:', error);
+    //         return [];
+    //     }
+    // };
+
+    const generateDatabaseResponse = (crops: Crop[], userMessage: string): string => {
+        const words = userMessage.toLowerCase().split(/\s+/);
+    
+        // Function to find the best match for a word in a list of options
+        const findBestMatch = (word: string, options: string[]): string | null => {
+            const ratings = options.map(option => ({
+                target: option,
+                rating: stringSimilarity(word, option)
+            }));
+            const bestMatch = ratings.reduce((best, current) => 
+                current.rating > best.rating ? current : best
+            );
+            return bestMatch.rating > 0.5 ? bestMatch.target : null;
+        };
+    
+        // Check if the query is about what to plant after a specific crop
+        const afterIndex = words.indexOf('after');
+        if (afterIndex !== -1 && afterIndex < words.length - 1) {
+            // Extract potential crop names (up to 3 words after "after")
+            const potentialCropNames = [
+                words[afterIndex + 1],
+                words.slice(afterIndex + 1, afterIndex + 3).join(' '),
+                words.slice(afterIndex + 1, afterIndex + 4).join(' ')
+            ];
+    
+            // Find the best matching crop
+            let matchedCrop: Crop | undefined;
+            for (const cropName of potentialCropNames) {
+                matchedCrop = crops.find(crop => 
+                    findBestMatch(cropName, [crop.crop_name.toLowerCase()]) !== null
+                );
+                if (matchedCrop) break;
+            }
+    
+            if (matchedCrop && matchedCrop.rotatable_with && matchedCrop.rotatable_with.length > 0) {
+                return `After ${matchedCrop.crop_name}, you can plant: ${matchedCrop.rotatable_with.join(', ')}.`;
+            } else if (matchedCrop) {
+                return `I don't have specific rotation information for ${matchedCrop.crop_name}.`;
+            } else {
+                return `I couldn't find information about crops to plant after "${potentialCropNames[0]}" in my database.`;
+            }
+        }
+    
+        // Find crops that match the user's query
+        const matchedCrops = crops.filter(crop =>
+            words.some(word => findBestMatch(word, [crop.crop_name.toLowerCase()]) !== null)
+        );
+    
+        if (matchedCrops.length === 0) {
+            return "I'm sorry, I couldn't find information about those crops in my database.";
+        }
+    
+        const nutrientKeywords = {
+            n: ['nitrogen', 'n', 'nitrate'],
+            p: ['phosphorus', 'p', 'phosphate'],
+            k: ['potassium', 'k', 'potash']
+        };
+    
+        const askedNutrients = Object.entries(nutrientKeywords)
+            .filter(([_, keywords]) => keywords.some(keyword => 
+                words.some(word => findBestMatch(word, [keyword]) !== null)
+            ))
+            .map(([key]) => key);
+    
+        if (words.some(word => 
+            findBestMatch(word, ['npk', 'nutrient', 'fertilizer']) !== null
+        )) {
+            askedNutrients.push('n', 'p', 'k');
+        }
+    
+        if (askedNutrients.length > 0) {
+            return matchedCrops.map(crop => {
+                const nutrients = askedNutrients.map(nutrient => {
+                    switch (nutrient) {
+                        case 'n': return `nitrogen: ${crop.recommended_nitrogen}`;
+                        case 'p': return `phosphorus: ${crop.recommended_phosphorus}`;
+                        case 'k': return `potassium: ${crop.recommended_potassium}`;
+                        default: return '';
+                    }
+                }).join(', ');
+                return `For ${crop.crop_name}, the recommended ${askedNutrients.length > 1 ? 'nutrients are' : 'nutrient is'} ${nutrients}.`;
+            }).join(' ');
+        } else if (words.some(word => 
+            findBestMatch(word, ['rotatable', 'rotation', 'alternate', 'sequence', 'plant after']) !== null
+        )) {
+            return matchedCrops.map(crop => 
+                crop.rotatable_with && crop.rotatable_with.length > 0 
+                    ? `${crop.crop_name} can be rotated with ${crop.rotatable_with.join(', ')}.`
+                    : `I don't have rotation information for ${crop.crop_name}.`
+            ).join(' ');
+        } else {
+            return "I'm not sure what specific information you're looking for. You can ask about nutrients (like nitrogen, phosphorus, potassium) or crop rotation.";
+        }
+    };
+    // const fetchDatabaseResponse = async (userMessage: string): Promise<void> => {
+    //     setIsLoading(true);
+    
+    //     try {
+    //         setMessages(prev => [...prev, { role: 'assistant', content: '', isComplete: false }]);
+    
+    //         const keywords = userMessage.toLowerCase().split(' ').filter(word => word.length > 3);
+    //         console.log('Extracted keywords:', keywords);
+    
+    //         const relevantCrops = await queryDatabase(keywords);
+    //         console.log('Server query results:', relevantCrops);
+    
+    //         const response = generateDatabaseResponse(relevantCrops, userMessage);
+    //         console.log('Generated response:', response);
+    
+    //         setMessages(prev => {
+    //             const updatedMessages = [...prev];
+    //             const lastMessage = updatedMessages[updatedMessages.length - 1];
+    //             if (lastMessage.role === 'assistant') {
+    //                 lastMessage.content = response;
+    //                 lastMessage.isComplete = true;
+    //             }
+    //             return updatedMessages;
+    //         });
+    //     } catch (error) {
+    //         console.error('Error fetching response:', error);
+    //         toast({
+    //             title: 'Error',
+    //             description: 'Failed to get response from the server.',
+    //             status: 'error',
+    //             duration: 3000,
+    //             isClosable: true,
+    //         });
+    //         setMessages(prev => [
+    //             ...prev,
+    //             { role: 'assistant', content: 'Sorry, I encountered an error while querying the server.', isComplete: true }
+    //         ]);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    
+    // };
+    // const handleSend = async () => {
+    //     if (input.trim() === '') return;
+
+    //     const userMessage: Message = { role: 'user', content: input, isComplete: true };
+    //     setMessages(prev => [...prev, userMessage]);
+    //     setInput('');
+
+    //     // await fetchHuggingFaceResponse(input);
+    //     await fetchDatabaseResponse(input);
+    // };
+
 
     const speakMessage = (text: string, index: number, startFrom: number = 0) => {
         if ('speechSynthesis' in window) {
@@ -113,7 +362,7 @@ const Chatbot: React.FC = () => {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = selectedLanguage === 'id' ? 'id-ID' : 'en-US';
             const voices = speechSynthesis.getVoices();
-            console.log("voices"+voices)
+            console.log("voices" + voices)
             const voice = voices.find(v => v.lang === utterance.lang);
             if (voice) {
                 utterance.voice = voice;
@@ -289,9 +538,10 @@ const Chatbot: React.FC = () => {
                             mr={2}
                             disabled={isLoading}
                         />
-                        <Button onClick={handleSend} colorScheme="blue" isLoading={isLoading} loadingText="Sending">
-                            Send
+                        <Button colorScheme="blue" onClick={handleSend} isLoading={isLoading} loadingText="Sending">
+                            Send 
                         </Button>
+                        {/* onClick={handleSend}  */}
                     </Flex>
                 </GridItem>
             </Grid>
